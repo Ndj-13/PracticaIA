@@ -47,27 +47,45 @@ namespace Assets.Scripts.Grupo22.Solucion1
         {
             //Crea lista vacia de nodos
             List<Nodo> openList = new List<Nodo>(); //guarda nodos por recorrer
+            //apunta siempre a primer elemento de la lista
+            List<Nodo> openListAux = new List<Nodo>(); //lista para ordenar
 
             int coste = 0;
+            CellInfo[] hijos;
 
             //Nodo inicial: posicion del jugador
-            Nodo n = new Nodo(board, start, coste);
+            Nodo n = new Nodo(board, start);
             //var n = new Nodo()
 
             //Añade nodo incial a la lista
             openList.Add(n);
 
             //Mientras lista no este vacia
-            //while (openList.Any())
-            //{
-            //    // mira el primer nodo de la lista
-            //
-            //    // si el primer nodo es goal, returns current node
-            //
-            //    // expande vecinos (calcula coste de cada uno, etc)y los añade en la lista
-            //
-            //    // ordena lista
-            //}
+            while (openList != null)
+            {
+                // mira el primer nodo de la lista
+            
+                // si el primer nodo es goal, returns current node
+                if(openList[0].Equals(goals))
+                {
+                    return openList[0];
+                }
+
+                // expande vecinos (calcula coste de cada uno, etc)y los añade en la lista
+                hijos = start.WalkableNeighbours(board); //hijos del nodo
+                for(int i = 0; i < hijos.Length; i++)
+                {
+                    n = new Nodo(board, hijos[i]); //como nodo ya esta en la lista, actualizamos el valor al de los hijos
+                    openList.Add(n); //añadimos cada hijo a la lista
+                }
+
+                // ordena lista: comprobar las f y ordenar de menor a mayor
+                for(int i = 0; i < openList.Count; i++) //tenemos el primer nodo + los hijos
+                {
+                    //Nodo a = new Nodo(board, openList.Remove(i));
+                   
+                }
+            }
             return null;
         }
 

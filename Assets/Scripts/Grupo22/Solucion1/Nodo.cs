@@ -10,19 +10,21 @@ namespace Assets.Scripts.Grupo22.Solucion1
 
     public class Nodo
     {
-        int f;
-        Nodo sig;
-        Nodo ant;
+        private int f;
+        private int g = 1;
+        CellInfo posActual;
+        private CellInfo [] hijos; //entre 0 y 3
 
-        public Nodo(BoardInfo board, CellInfo posActual, int g)
+        public Nodo(BoardInfo board, CellInfo nodoActual)
         {
             CellInfo meta = board.Exit;
-            int columnasMeta = Mathf.Abs(meta.ColumnId - posActual.ColumnId);
-            int filasMeta = Mathf.Abs(meta.RowId - posActual.RowId);
+            int columnasMeta = Mathf.Abs(meta.ColumnId - nodoActual.ColumnId);
+            int filasMeta = Mathf.Abs(meta.RowId - nodoActual.RowId);
 
-            int f = columnasMeta + filasMeta + g; //g = coste de nodo inicial a actual
+            f = columnasMeta + filasMeta + g; //g = coste de nodo inicial a actual
             //f = distancia desde celda actual + salida + distancia recorrida (g(n) + h*(n)
-            sig = ant = null;
+           posActual = nodoActual;
+            //hijos = nodoActual.WalkableNeighbours(board);
         }
     }
 }
