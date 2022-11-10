@@ -31,6 +31,7 @@ namespace Assets.Scripts
             {
 
                 var boardClone = (BoardInfo)BoardManager.boardInfo.Clone();
+                //Desde aqui se llama a metodo GetNextMove de AStarMind:
                 LocomotionController.SetNewDirection(PathController.GetNextMove(boardClone,LocomotionController.CurrentEndPosition(),new [] {this.currentTarget}));
             }
         }
