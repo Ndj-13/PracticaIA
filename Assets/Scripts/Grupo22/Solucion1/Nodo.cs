@@ -29,12 +29,13 @@ namespace Assets.Scripts.Grupo22.Solucion1
 
         public double funHeuristica()
         {
-            //int columnasMeta = Mathf.Abs(meta.ColumnId - posActual.ColumnId);
-            //int filasMeta = Mathf.Abs(meta.RowId - posActual.RowId);
-            Vector2 distManhattam = meta.GetPosition - posActual.GetPosition;
-            double h = Mathf.Abs(distManhattam.x) + Mathf.Abs(distManhattam.y);
+            //Funcion heuristica de A*: f*(n) = g(n) + h*(n)
+            //h*(n): coste estimado de nodo actual a mejor meta
 
-            f = h + g;
+            int columnasMeta = Mathf.Abs(meta.ColumnId - posActual.ColumnId);
+            int filasMeta = Mathf.Abs(meta.RowId - posActual.RowId);
+
+            f = columnasMeta + filasMeta + g; //h = columnas + filas
 
             return f;
         }
@@ -57,42 +58,6 @@ namespace Assets.Scripts.Grupo22.Solucion1
                     break;
             }
         }
-
-            //Funcion heuristica de A*: f*(n) = g(n) + h*(n)
-
-            //h*(n): coste estimado de nodo actual a mejor meta
-            //CellInfo meta = board.Exit;
-            //int columnasMeta = Mathf.Abs(meta.ColumnId - nodoActual.ColumnId);
-            //int filasMeta = Mathf.Abs(meta.RowId - nodoActual.RowId);
-            //
-            ////g = coste de nodo inicial a actual
-            //g = father.g + nodoActual.WalkCost;
-            //
-            //f = columnasMeta + filasMeta + g; 
-            ////f = distancia desde celda actual + salida + distancia recorrida (g(n) + h*(n)
-            //
-            //posActual = nodoActual;
-            //hijos = nodoActual.WalkableNeighbours(board);
-            //padre = father;
-            //dir = direccion;
-            //switch(direccion)
-            //{
-            //    case 0:
-            //        ProducedBy = Locomotion.MoveDirection.Up;
-            //        break;
-            //    case 1:
-            //        ProducedBy = Locomotion.MoveDirection.Right;
-            //        break;
-            //    case 2:
-            //        ProducedBy = Locomotion.MoveDirection.Down;
-            //        break;
-            //    case 3:
-            //        ProducedBy = Locomotion.MoveDirection.Left;
-            //        break;
-            //    case 4:
-            //        ProducedBy = 0; //para la raiz
-            //        break;
-            //}
         
     }
 }

@@ -46,7 +46,6 @@ namespace Assets.Scripts.Grupo22.Solucion1
             }
 
             return Locomotion.MoveDirection.None; //devuelve nodo donde esta la meta 
-                                                  //Cuando tenemos un nodo, para saber q camino ha tomado hay q ver qn es su padre --> recorrer arbol al reves
 
         }
         
