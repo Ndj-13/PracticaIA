@@ -9,15 +9,15 @@ namespace Assets.Scripts.Grupo22.Solucion1
 {
     public class AStarMind : AbstractPathMind
     {
+        // declarar Stack de Locomotion.MoveDirection de los movimientos hasta llegar al objetivo
+        private Stack<Locomotion.MoveDirection> currentPlan = new Stack<Locomotion.MoveDirection>(); //ALEX 11:30 6/11
+
         public override void Repath()
         {
             currentPlan.Clear(); //ALEX
                                  // limpiar Stack 
         }
         //Algoritmo de busqueda de caminos offline que encuentre la meta (GOAL)
-
-        // declarar Stack de Locomotion.MoveDirection de los movimientos hasta llegar al objetivo
-        private Stack<Locomotion.MoveDirection> currentPlan = new Stack<Locomotion.MoveDirection>(); //ALEX 11:30 6/11
 
         public override Locomotion.MoveDirection GetNextMove(BoardInfo boardInfo, CellInfo currentPos, CellInfo[] goals)
         {
@@ -54,11 +54,10 @@ namespace Assets.Scripts.Grupo22.Solucion1
         {
             //Crea lista vacia de nodos
             List<Nodo> openList = new List<Nodo>(); //guarda nodos por recorrer
-            ////apunta siempre a primer elemento de la lista
-            CellInfo[] hijos;            
+            ////apunta siempre a primer elemento de la lista           
 
             //Nodo inicial: posicion del jugador
-            Nodo n = new Nodo(boardInfo, start, 4, null);
+            Nodo n = new Nodo(boardInfo, start);
             n.g = 0;
 
             //Añade nodo incial a la lista
@@ -67,26 +66,35 @@ namespace Assets.Scripts.Grupo22.Solucion1
             //Mientras lista no este vacia
             while (openList.Any())
             {
-                // mira el primer nodo de la lista
-                Nodo primerNodoLista = openList[0]; //no queremos crear un nuevo nodo sino acceder al primero de la lista
-            
-                // si el primer nodo es goal, returns current node
-                if(primerNodoLista.posActual == boardInfo.Exit)
+                //Calcula camino inverso si tiene padre:
+                if(openList[0].padre != null)
                 {
-                    return primerNodoLista;
+                    openList[0].caminoInverso();
+                }
+                // mira el primer nodo de la lista --> si es goal, returns current node        
+                if (openList[0].posActual == goals[0])
+                {
+                    return openList[0];
                 }
                 //En este caso como solo hay una salida pdemos usar tanto boardInfo.Exit como gaols[0]
 
                 // expande vecinos (calcula coste de cada uno, etc)y los añade en la lista
-                hijos = start.WalkableNeighbours(boardInfo); //hijos del nodo
+                CellInfo[] hijos = openList[0].posActual.WalkableNeighbours(boardInfo); //hijos del nodo
                 //[0]: up, [1]: right, [2]: down, [3]: left
-                Nodo father = n; //guardamos el valor del padre para pasarselo a los hijos
+                
                 for(int i = 0; i < hijos.Length; i++)
                 {
-                    if (hijos[i].Walkable) //si la posicion es null quiere decir q no se puede ir por ahi
+                    if (hijos[i] != null) //si la posicion es null quiere decir q no se puede ir por ahi
                     {
-                        n = new Nodo(boardInfo, hijos[i], i, father); //como nodo ya esta en la lista, actualizamos el valor al de los hijos
-                        openList.Add(n); //añadimos cada hijo a la lista
+                        Nodo h = new Nodo(boardInfo, hijos[i]);
+                        h.padre = openList[0];
+                        h.dir = i;
+                        if(h.padre != null)
+                        {
+                            h.g = h.padre.g + hijos[i].WalkCost;
+                        }
+                        h.funHeuristica();
+                        openList.Add(h); //añadimos cada hijo a la lista
                     }
                 }
 
