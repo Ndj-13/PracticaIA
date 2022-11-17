@@ -29,9 +29,6 @@ namespace Assets.Scripts.Grupo22.Solucion1
 
         public double funHeuristica()
         {
-            //Funcion heuristica de A*: f*(n) = g(n) + h*(n)
-            //h*(n): nº movimientos que realiza personaje hasta llegar a enemigo - estado objetivo del personaje
-
             int columnasMeta = Mathf.Abs(meta.ColumnId - posActual.ColumnId);
             int filasMeta = Mathf.Abs(meta.RowId - posActual.RowId);
 
