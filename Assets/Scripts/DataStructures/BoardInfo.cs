@@ -126,6 +126,8 @@ namespace Assets.Scripts.DataStructures
 
                 
                 emptyCells = this.EmptyCells;
+
+                Enemies.Add(enemy);
             }
 
         }

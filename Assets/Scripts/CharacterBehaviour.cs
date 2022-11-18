@@ -19,9 +19,6 @@ namespace Assets.Scripts
             PathController.SetCharacter(this);
             LocomotionController = GetComponent<Locomotion>();
             LocomotionController.SetCharacter(this);
-
-            
-
         }
 
         void Update()
@@ -29,8 +26,7 @@ namespace Assets.Scripts
             if (BoardManager == null) return;
             if (LocomotionController.MoveNeed)
             {
-
-                var boardClone = (BoardInfo)BoardManager.boardInfo.Clone();
+                BoardInfo boardClone = BoardManager.boardInfo;
                 //Desde aqui se llama a metodo GetNextMove de AStarMind:
                 LocomotionController.SetNewDirection(PathController.GetNextMove(boardClone,LocomotionController.CurrentEndPosition(),new [] {this.currentTarget}));
             }

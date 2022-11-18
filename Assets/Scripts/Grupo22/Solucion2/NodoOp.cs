@@ -5,7 +5,7 @@ using System.Linq;
 using Assets.Scripts.DataStructures;
 using UnityEngine;
 
-namespace Assets.Scripts.Grupo22.Solucion1
+namespace Assets.Scripts.Grupo22.Solucion2
 {
 
     public class NodoOp
@@ -16,15 +16,15 @@ namespace Assets.Scripts.Grupo22.Solucion1
         public CellInfo meta;
         public CellInfo posActual;
 
-        public Nodo padre;
+        public NodoOp padre;
         public int dir;
 
         public Locomotion.MoveDirection ProducedBy;
 
-        public NodoOp(BoardInfo board, CellInfo nodoActual)
+        public NodoOp(CellInfo nodoActual, CellInfo goal)
         {
             posActual = nodoActual;
-            meta = board.Exit;
+            meta = goal;
         }
 
         public double funHeuristica()

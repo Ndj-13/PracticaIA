@@ -5,15 +5,16 @@ using Assets.Scripts.DataStructures;
 using System.Linq;
 using UnityEngine;
 
-namespace Assets.Scripts.Grupo22.Solucion1
+namespace Assets.Scripts.Grupo22.Solucion2
 {
     public class AStarMindOp : AbstractPathMind
     {
         // declarar Stack de Locomotion.MoveDirection de los movimientos hasta llegar al objetivo
         private Stack<Locomotion.MoveDirection> currentPlan = new Stack<Locomotion.MoveDirection>();
-                                                                                                     //Calculamos posiciones enemigos
+        //Calculamos posiciones enemigos
         //Tenemos prmiero que movernos hacia enemigos y luego hacia meta, creamos lista con todo ello:
-        private List<Locomotion.MoveDirection> listaTareas = new List<Locomotion.MoveDirection>();
+
+        //private List<Locomotion.MoveDirection> siguienteMov = new List<Locomotion.MoveDirection>();
         
         //private List<CellInfo> enemies = new List<CellInfo>() { };
 
@@ -27,57 +28,92 @@ namespace Assets.Scripts.Grupo22.Solucion1
         public override Locomotion.MoveDirection GetNextMove(BoardInfo boardInfo, CellInfo currentPos, CellInfo[] goals)
         {
             //Si la pila NO está vacia --> siguiente movimiento
-            while (currentPlan.Any())
+            if (currentPlan.Any())
             {
                 return currentPlan.Pop();
             }
 
-            while (boardInfo.Enemies.Count() > 0)
+            List<Locomotion.MoveDirection> siguienteMov = listaMovimientos(boardInfo, currentPos, goals);
+
+            while(siguienteMov.Any())
             {
-                var posEnemigo = boardInfo.Enemies[0].GetComponent<EnemyBehaviour>().CurrentPosition();
+                currentPlan.Push(siguienteMov[0]);
+                siguienteMov.RemoveAt(0);
+            }
+
+            if (currentPlan.Any())
+            {
+                return currentPlan.Pop();
+            }
+
+            return Locomotion.MoveDirection.None; //devuelve nodo donde esta la meta
+        }
+
+        //entran en pila todos los movimientos y se meten a la lista en el orden en q se tienen q ejecutar
+        private List<Locomotion.MoveDirection> listaMovimientos(BoardInfo board, CellInfo currentPos, CellInfo[] goals)
+        {
+            List<Locomotion.MoveDirection> listaTareas = new List<Locomotion.MoveDirection>();
+            //Metemos movimientos
+
+            if (board.Enemies.Count() > 0)
+            {
+                List<NodoOp> enemies = new List<NodoOp>();
+                for (int nEnemies = 0; nEnemies < board.Enemies.Count(); nEnemies++)
+                {
+                    NodoOp posEnemigo = new NodoOp(board.Enemies[nEnemies].GetComponent<EnemyBehaviour>().CurrentPosition(), null);
+                    posEnemigo.f = cercaniaP(currentPos, posEnemigo.posActual);
+                    enemies.Add(posEnemigo);
+                }
+                //Ordenamos la lista:
+                enemies = enemies.OrderBy(n => n.f).ToList(); //solo se mira el q esta en primera posicion
+
                 //Primero vamos a por los enemigos con busqueda con horizonte
-                var searchEnemy = SearchEnemies(boardInfo, currentPos, posEnemigo);
+                var searchEnemy = SearchEnemies(board, currentPos, enemies[0].posActual);
+                enemies.RemoveAt(0);
 
                 while (searchEnemy.padre != null)
                 {
-                    currentPlan.Push(searchEnemy.ProducedBy); //metemos en la pila
+                    listaTareas.Add(searchEnemy.ProducedBy); //metemos en la lista
                     searchEnemy = searchEnemy.padre;
                 }
-                if (currentPlan.Any())
-                {
-                    return currentPlan.Pop();
-                }
+                return listaTareas;
             }
 
-            var searchResult = SearchGoal(boardInfo, currentPos, goals); //devuelve nodo meta en caso de q haya camino o null en caso de que no
+            //Cuando ya ha encontrado a enemigos:
+
+            var searchResult = SearchGoal(board, currentPos, goals); //devuelve nodo meta en caso de q haya camino o null en caso de que no
 
             //Recorre el algoritmo de busqueda y copia el camino en la pila currentPlan
             //Recorre desde el hijo hasta el padre para saber cual es el camino correcto
             while (searchResult.padre != null)
             {
-                currentPlan.Push(searchResult.ProducedBy); //metemos en la pila
+                listaTareas.Add(searchResult.ProducedBy); //metemos en la pila
                 searchResult = searchResult.padre;
             }
-            if (currentPlan.Any())
-            {
-                return currentPlan.Pop();
-            }
-            return Locomotion.MoveDirection.None; //devuelve nodo donde esta la meta
+            return listaTareas;
         }
 
-        private Nodo SearchEnemies(BoardInfo boardInfo, CellInfo start, CellInfo enemigo)
+        private int cercaniaP(CellInfo personaje, CellInfo enemigo)
+        {
+            int columnas = Mathf.Abs(enemigo.ColumnId - personaje.ColumnId);
+            int filas = Mathf.Abs(enemigo.RowId - personaje.RowId);
+            int res = columnas + filas;
+            return res;
+        }
+
+        private NodoOp SearchEnemies(BoardInfo boardInfo, CellInfo start, CellInfo enemigo)
         {
             //Se recorre arbol hasta nivel k
             //En nivel k se calculan f* y se busca la menor
             //volviendo a la raiz, se avanza por el nodo hijo q lleve a la f* de menor valor
 
             //Crea lista vacia de nodos
-            List<Nodo> openList = new List<Nodo>(); //guarda nodos por recorrer
+            List<NodoOp> openList = new List<NodoOp>(); //guarda nodos por recorrer
             ////apunta siempre a primer elemento de la lista           
-            Stack<Nodo> busqHorizonte = new Stack<Nodo>();
+            Stack<NodoOp> busqHorizonte = new Stack<NodoOp>();
 
             //Nodo inicial: posicion del jugador
-            Nodo n = new Nodo(boardInfo, start);
+            NodoOp n = new NodoOp(start, enemigo);
             n.g = 0;
 
             //Añade nodo incial a la lista
@@ -97,19 +133,18 @@ namespace Assets.Scripts.Grupo22.Solucion1
                     return openList[0];
                 }
                 //En este caso como solo hay una salida pdemos usar tanto boardInfo.Exit como gaols[0]
-
+                
                 for (int k = 0; k < 3; k++) //solo queremos saber 3 primeros niveles
                 {
                     //Expandir hijos del nodo actual
                     CellInfo[] hijos = openList[0].posActual.WalkableNeighbours(boardInfo); //hijos del nodo
                                                                                             //[0]: up, [1]: right, [2]: down, [3]: left
-
-                    //Para cada hijo:
-                    for(int i = 0; i < hijos.Length; i++)
+                                                                                            //Para cada hijo:
+                    for (int i = 0; i < hijos.Length; i++)
                     {
                         if (hijos[i] != null)
                         {
-                            Nodo h = new Nodo(boardInfo, hijos[i]); //creamos nodo
+                            NodoOp h = new NodoOp(hijos[i], enemigo); //creamos nodo
                             h.padre = openList[0]; //anotamos qn es el padre
                             h.dir = i; //anotamos de q casilla viene
                             if (h.padre != null)
@@ -128,6 +163,7 @@ namespace Assets.Scripts.Grupo22.Solucion1
                 }
                 //Una vez tenemos todos los nodos del nivel k, reordenamos lista segun coste
                 openList = openList.OrderBy(n => n.f).ToList(); //reordenamos lista y nos quedamos solo con el primero
+
                 //Nos quedamos solo con primer elemento y eliminamos el resto:
                 for(int i = 1; i < openList.Count(); i++)
                 {
@@ -143,22 +179,22 @@ namespace Assets.Scripts.Grupo22.Solucion1
                 }
 
                 //Vaciamos lista y metemos el hijo por el que tiene que ir:
-                openList.Clear();
                 busqHorizonte.Pop(); //quitamos al padre
                 openList.Add(busqHorizonte.Pop());
+                openList.RemoveAt(0);
                 busqHorizonte.Clear(); //vaciamos la pila
             }
             return null;
         }
 
-        private Nodo SearchGoal(BoardInfo boardInfo, CellInfo start, CellInfo[] goals)
+        private NodoOp SearchGoal(BoardInfo boardInfo, CellInfo start, CellInfo[] goals)
         {
             //Crea lista vacia de nodos
-            List<Nodo> openList = new List<Nodo>(); //guarda nodos por recorrer
+            List<NodoOp> openList = new List<NodoOp>(); //guarda nodos por recorrer
             ////apunta siempre a primer elemento de la lista           
 
             //Nodo inicial: posicion del jugador
-            Nodo n = new Nodo(boardInfo, start);
+            NodoOp n = new NodoOp(start, goals[0]);
             n.g = 0;
 
             //Añade nodo incial a la lista
@@ -173,7 +209,7 @@ namespace Assets.Scripts.Grupo22.Solucion1
                     openList[0].caminoInverso();
                 }
                 // mira el primer nodo de la lista --> si es goal, returns current node        
-                if (openList[0].posActual == boardInfo.Exit)
+                if (openList[0].posActual == goals[0])
                 {
                     return openList[0];
                 }
@@ -187,7 +223,7 @@ namespace Assets.Scripts.Grupo22.Solucion1
                 {
                     if (hijos[i] != null) //si la posicion es null quiere decir q no se puede ir por ahi
                     {
-                        Nodo h = new Nodo(boardInfo, hijos[i]);
+                        NodoOp h = new NodoOp(hijos[i], goals[0]);
                         h.padre = openList[0];
                         h.dir = i;
                         if (h.padre != null)
