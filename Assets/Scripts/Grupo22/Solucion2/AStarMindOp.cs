@@ -15,8 +15,9 @@ namespace Assets.Scripts.Grupo22.Solucion2
         //Tenemos prmiero que movernos hacia enemigos y luego hacia meta, creamos lista con todo ello:
 
         //private List<Locomotion.MoveDirection> siguienteMov = new List<Locomotion.MoveDirection>();
-        
+
         //private List<CellInfo> enemies = new List<CellInfo>() { };
+       
 
         public override void Repath()
         {
@@ -55,20 +56,27 @@ namespace Assets.Scripts.Grupo22.Solucion2
             List<Locomotion.MoveDirection> listaTareas = new List<Locomotion.MoveDirection>();
             //Metemos movimientos
 
-            while (board.Enemies.Count() > 0)
+            List<CellInfo> enemies = new List<CellInfo>();
+            GameObject[] encontrarEnemigos = GameObject.FindGameObjectsWithTag("Enemy");
+            foreach(GameObject Enemy in encontrarEnemigos)
             {
-                List<NodoOp> enemies = new List<NodoOp>();
-                for (int nEnemies = 0; nEnemies < board.Enemies.Count(); nEnemies++)
-                {
-                    NodoOp posEnemigo = new NodoOp(board.Enemies[nEnemies].GetComponent<EnemyBehaviour>().CurrentPosition(), null);
-                    posEnemigo.f = cercaniaP(currentPos, posEnemigo.posActual);
-                    enemies.Add(posEnemigo);
-                }
+                enemies.Add(Enemy.GetComponent<EnemyBehaviour>().CurrentPosition());
+            }
+
+            while (enemies.Any())
+            {
+                
+                //for (int nEnemies = 0; nEnemies < board.Enemies.Count(); nEnemies++)
+                //{
+                //    NodoOp posEnemigo = new NodoOp(, null);
+                //    posEnemigo.f = cercaniaP(currentPos, posEnemigo.posActual);
+                //    enemies.Add(posEnemigo);
+                //}
                 //Ordenamos la lista:
-                enemies = enemies.OrderBy(n => n.f).ToList(); //solo se mira el q esta en primera posicion
+                //enemies = enemies.OrderBy(n => n.f).ToList(); //solo se mira el q esta en primera posicion
 
                 //Primero vamos a por los enemigos con busqueda con horizonte
-                var searchEnemy = SearchEnemies(board, currentPos, enemies[0].posActual);
+                var searchEnemy = SearchEnemies(board, currentPos, enemies[0]);
                 enemies.RemoveAt(0);
 
                 while (searchEnemy.padre != null)
@@ -162,6 +170,7 @@ namespace Assets.Scripts.Grupo22.Solucion2
                     }
                     openList.RemoveAt(0);
                 }
+                Debug.Log("Se ha recorrido k");
                 //Una vez tenemos todos los nodos del nivel k, reordenamos lista segun coste
                 openList = openList.OrderBy(n => n.f).ToList(); //reordenamos lista
 
