@@ -55,7 +55,7 @@ namespace Assets.Scripts.Grupo22.Solucion2
             List<Locomotion.MoveDirection> listaTareas = new List<Locomotion.MoveDirection>();
             //Metemos movimientos
 
-            if (board.Enemies.Count() > 0)
+            while (board.Enemies.Count() > 0)
             {
                 List<NodoOp> enemies = new List<NodoOp>();
                 for (int nEnemies = 0; nEnemies < board.Enemies.Count(); nEnemies++)
@@ -137,9 +137,9 @@ namespace Assets.Scripts.Grupo22.Solucion2
                 for (int k = 0; k < 3; k++) //solo queremos saber 3 primeros niveles
                 {
                     //Expandir hijos del nodo actual
-                    CellInfo[] hijos = openList[0].posActual.WalkableNeighbours(boardInfo); //hijos del nodo
-                                                                                            //[0]: up, [1]: right, [2]: down, [3]: left
-                                                                                            //Para cada hijo:
+                    CellInfo[] hijos = openList[0].posActual.WalkableNeighbours(boardInfo); //[0]: up, [1]: right, [2]: down, [3]: left
+
+                    //Para cada hijo:
                     for (int i = 0; i < hijos.Length; i++)
                     {
                         if (hijos[i] != null)
@@ -158,14 +158,15 @@ namespace Assets.Scripts.Grupo22.Solucion2
                             }
                             openList.Add(h);
                         }
+                        hijos[i] = null;
                     }
                     openList.RemoveAt(0);
                 }
                 //Una vez tenemos todos los nodos del nivel k, reordenamos lista segun coste
-                openList = openList.OrderBy(n => n.f).ToList(); //reordenamos lista y nos quedamos solo con el primero
+                openList = openList.OrderBy(n => n.f).ToList(); //reordenamos lista
 
                 //Nos quedamos solo con primer elemento y eliminamos el resto:
-                for(int i = 1; i < openList.Count(); i++)
+                for(int i = openList.Count() - 1; i > 0; i--)
                 {
                     openList.RemoveAt(i);
                 }
