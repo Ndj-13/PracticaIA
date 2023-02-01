@@ -9,14 +9,8 @@ using Assets.Scripts;
 namespace Assets.Scripts.PracticaPart2
 {
 
-    public class QlearningMind : AbstractPathMind{
+    public class QlearningMind_3 : AbstractPathMind{
         //public FileStream ficherotablaQ;
-
-        [SerializeField] private float alpha = 0.7f;
-        [SerializeField] private float gamma = 0.5f;
-
-        [SerializeField] private int N_EPI_MAX = 100;
-        [SerializeField] private int N_ITER_MAX = 100;
 
         private float[,] tableQ; 
 
@@ -27,16 +21,22 @@ namespace Assets.Scripts.PracticaPart2
         
         public override Locomotion.MoveDirection GetNextMove(BoardInfo boardInfo, CellInfo currentPos, CellInfo[] goals)
         {
-            if (tableQ == null) //si no existe ninguna tabla
-            {
-                //Creamos tabla y realizamos aprendizaje
-                tableQ = new float[8 * 14, 4];
-;
-                aprendizajeQ(goals, boardInfo);
+            //Crear fichero
+            //writeTableQ();
+            //Debug.Log(currentPos.GetPosition);
 
-            } else //si existe la tabla: explotar
+            if (tableQ == null)
             {
+                tableQ = new float[8 * 14, 4];
+                //Debug.Log(tableQ[0,0]);
+                //ficherotablaQ = createTableQ(boardInfo);
+                aprendizajeQ(goals, boardInfo);
                 
+
+            } else
+            {
+                //arrayTablaQ("./Assets/Scripts/Grupo22/Qlearning/tableQ.txt");
+                //ficherotablaQ = new FileStream("./Assets/Scripts/PracticaPart2/tableQ.txt", FileMode.Open, FileAccess.Read);
                 return explotar(boardInfo, currentPos, goals);
             }
 
@@ -45,28 +45,48 @@ namespace Assets.Scripts.PracticaPart2
         }
 
         public void aprendizajeQ(CellInfo[] goals, BoardInfo boardInfo)
-        { 
-            string path = "./Assets/Scripts/Grupo22/Qlearning/tableQ"+GameManager.instance.seed+".txt";
+        { //seguramente necesitemos varios atributos como boiardinfo
+            //------------------------------------------------- APRENDIZAJE con EXPLORACION 100%
+            //float[,] tableQ = new float[8*14, 4]; //ponerlo mejor donde se escribe el txt
+            string path = "./Assets/Scripts/Grupo22/Qlearning/tableQ.txt";
+            //createTableQ(boardInfo, path);
+            //tableQ = arrayTablaQ(path);
 
+            int N_EPI_MAX = 100;
+            int N_ITER_MAX = 100;
             for (int k = 0; k < N_EPI_MAX; k++)
             {
                 int iter = 0;
-                CellInfo next_cell = Get_random_cell(boardInfo); //celda aleatoria
+                CellInfo next_cell = Get_random_cell(boardInfo);
                 bool stop_condition = false;
+                float current_action;
+                float reward;
+                float next_Qmax, next_Q;
+                float alpha = 0.7f;
+                float gamma = 0.5f;
                 while (!stop_condition)
                 {
                     CellInfo current_cell = next_cell;
-                    float current_action = Get_random_action(boardInfo, current_cell); //accion aleatoria
-                    next_cell = Run_FSM(boardInfo, current_cell, current_action); //buscamos vecino
-                    float current_Q = Get_Q(current_cell, current_action, boardInfo); //valor Q de la celda
+                    //Debug.Log("Estado aleatorio: " + current_cell.GetPosition);
+                    current_action = Get_random_action(boardInfo, current_cell); //llamar a GetNextMove()
+                    //Debug.Log("Accion aleatoria: " + current_action);
+                    next_cell = Run_FSM(boardInfo, current_cell, current_action);
+                    //Debug.Log("Realizar accion: " + next_cell.GetPosition);
+                    float current_Q = Get_Q(current_cell, current_action, boardInfo);
 
-                    float reward = Get_Reward(current_cell, current_action, next_cell, goals); //celda vecina = recompensa?
-                    float next_Qmax = Get_maxQ(next_cell, boardInfo); //maximo valor Q celda vecina
-                    float next_Q = Update_rule(current_Q, reward, next_Qmax, alpha, gamma); //nuevo valor Q
-                    Update_tableQ(current_cell, current_action, next_Q, boardInfo); //actualizar tabla
 
-                    iter = iter + 1; 
+                    reward = Get_Reward(current_cell, current_action, next_cell, goals);
+                    //Debug.Log(reward);
+                    next_Qmax = Get_maxQ(next_cell, boardInfo);
+                    //Debug.Log(next_Qmax);
+                    next_Q = Update_rule(current_Q, reward, next_Qmax, alpha, gamma);
+                    //Debug.Log(next_Q);
+                    /*tableQ =*/
+                    Update_tableQ(current_cell, current_action, next_Q, boardInfo);
+
+                    iter = iter + 1; //volvemos a empezar con nuevo valor aleatorio
                     stop_condition = Evaluate_stop(iter, N_ITER_MAX, next_cell, goals);
+                    //Debug.Log(stop_condition);
                 }
             }
             //Cuando termina todo escribimos resultado en fichero:
@@ -75,6 +95,14 @@ namespace Assets.Scripts.PracticaPart2
 
         public CellInfo Get_random_cell(BoardInfo board/*, CellInfo currentPos, CellInfo[] goals*/)
         {
+            /*
+            CellInfo celda;
+
+            var valx = Random.Range(0, 14);
+            var valy = Random.Range(0, 8);
+            celda = new CellInfo(valx, valy);
+            return celda;*/
+            //test 2
 
             CellInfo randomCell = null;
 
@@ -96,6 +124,13 @@ namespace Assets.Scripts.PracticaPart2
 
         public float Get_random_action(BoardInfo board, CellInfo current_cell)
         {
+            /*
+            var val = Random.Range(0, 4);
+            if (val == 0) return 1.0f; //n
+            if (val == 1) return 2.0f; //e
+            if (val == 2) return 3.0f; //s
+            return 4.0f; //e*/
+            //test 2
             //Mirar las acciones disponibles (si hay muros o limites)
             CellInfo[] acciones = current_cell.WalkableNeighbours(board);
             //[0]: up(N), [1]: right(E), [2]: down(O), [3]: left(S)
@@ -109,6 +144,8 @@ namespace Assets.Scripts.PracticaPart2
 
                 if (acciones[rand] != null) accion_valida = true;
             }
+
+            //Debug.Log("Accion: "+ rand);
 
             return rand;
             
@@ -147,6 +184,7 @@ namespace Assets.Scripts.PracticaPart2
         
 
         public float Get_Q(CellInfo current_cell, float current_action, BoardInfo boardInfo){
+           // float idx = current_cell.GetPosition.y*4.0f+current_cell.GetPosition.x;
             float idx = current_cell.RowId * boardInfo.NumColumns + current_cell.ColumnId;
             return tableQ[(int)idx, (int)current_action];
         }
@@ -162,8 +200,14 @@ namespace Assets.Scripts.PracticaPart2
                     max = tableQ[(int)idx,i];
                 }
             }
-
+                //float maxQ = -1;
+                //for(int i = 0; i <4; i++){
+                //    if(tableQ[(int)idx, i] > maxQ){
+                //        maxQ = tableQ[(int)idx,i];
+                //    }
+                //}
             return max;
+                //Debug.Log(maxQ);
 
         }
 
@@ -171,12 +215,22 @@ namespace Assets.Scripts.PracticaPart2
             float valorQ; 
             valorQ = (1.0f - alpha) * current_Q + (alpha * (reward + gamma * next_Qmax));
             return valorQ;
+            //Debug.Log(Q);
         }
 
         public void Update_tableQ(CellInfo current_cell, float current_action, float next_Q, BoardInfo boardInfo){
             float idx = current_cell.RowId * boardInfo.NumColumns + current_cell.ColumnId;
             tableQ[(int)idx, (int)current_action] = next_Q;
             
+            Debug.Log(tableQ[(int)idx, (int)current_action]);
+            /*
+            for (int i = 0; i < boardInfo.NumColumns; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                   Debug.Log(tableQ[0, 0]);
+                }
+            }*/
         }
         
         public float Get_Reward(CellInfo current_cell,float current_action, CellInfo next_cell, CellInfo[] goals){
@@ -201,12 +255,103 @@ namespace Assets.Scripts.PracticaPart2
                 return false;
             }
         }
+        
+        private void createTableQ(BoardInfo board, string path)
+        {
+            //string path = "./Assets/Scripts/Grupo22/Qlearning/tableQ.txt";
+
+            //FileStream fs = File.Create(path);
+
+            char[] chars = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N' };
+
+            using (StreamWriter writeficheroQ = new StreamWriter(path))
+            {
+                //112 estados - 12 de muros
+                //4 acciones: N, S, E, O
+                for (int i = 0; i < board.NumRows; i++) //filas
+                {
+                    for (int j = 0; j < board.NumColumns; j++) //columnas
+                    {
+                        //Guardamos el tablero en orden desde la primera celda comenzando desde arriba a la izquierda hasta la ultima abajo a la derecha
+                        //Las columnas se guardaran por letra de la A a la N, y las filas por numero del 1 al 8
+                        writeficheroQ.Write(i);
+                        writeficheroQ.Write(chars[j] + ":");
+                        for (int k = 0; k < 4; k++) //N/ S/ E/ O
+                        {
+                            writeficheroQ.Write(0 + "|");
+                        }
+                        writeficheroQ.WriteLine("");
+
+                    }
+                }
+
+                writeficheroQ.Close();
+            }
+        }
+
+        private float[,] arrayTablaQ(string path)
+        {
+            float[,] array = new float[14 * 8, 4];
+            //Variable para buscar valor
+            string line = "Not found";
+            int index = -1;
+            float valorQ = -1;
+
+            try
+            {
+                using (StreamReader buscar = new StreamReader(path))
+                {
+                    int linea = 0;
+                    while (!buscar.EndOfStream)
+                    {
+
+                        line = buscar.ReadLine();
+                        string[] celda = line.Split(':', '|');
+                        //[0] = XY
+                        //[1] = N
+                        //[2] = E
+                        //[3] = S
+                        //[4] = O
+                        //for (int i = 0; i < celda.Length-1; i++)
+                        //{
+                        //    Debug.Log(celda[i]);
+                        //}
+
+                        //Debug.Log(celda[0]);
+                        for (int i = 1; i < celda.Length - 1; i++)
+                        {
+                            array[linea, i-1] = float.Parse(celda[i]);
+                            //Debug.Log(celda[i]+"-->"+array[linea, i-1]);
+                        }
+                        linea++;
+                        //Debug.Log("Comienza segunda ronda");
+
+                    }
+
+                    buscar.DiscardBufferedData();
+                    buscar.BaseStream.Seek(0, SeekOrigin.Begin);
+
+                    buscar.Close();
+                }
+            }
+            catch (FileNotFoundException e)
+            {
+                Debug.Log("Error: Fichero no encontrado");
+            }
+
+
+            return array;
+        }
 
         private Locomotion.MoveDirection explotar(BoardInfo boardInfo, CellInfo currentPos, CellInfo[] goals)
         {
+            //1.next_cell = Get_initial_cell();
             CellInfo next_cell = Get_initial_cell(currentPos);
             CellInfo current_cell = next_cell;
-
+            //posicion incial
+            //2.current_cell = next_cell; //pasar a
+            //CellInfo next_cell;
+            //3.decision_made = Get_best_action(tableQ, current_cell)
 
            int decision_made = Get_best_action(current_cell, boardInfo);
 
@@ -218,10 +363,20 @@ namespace Assets.Scripts.PracticaPart2
                 }
             }
 
+            //Debug.Log(decision_made);
+
             if (decision_made == 0) return Locomotion.MoveDirection.Up;
             if (decision_made == 1) return Locomotion.MoveDirection.Right;
             if (decision_made == 2) return Locomotion.MoveDirection.Down;
             return Locomotion.MoveDirection.Left;
+            //return decision_made
+            //}
+            //4.next_cell = Run_FSM(current_cell, decision_made); //
+            /*
+            * ยก Realmente, la FSM es el propio juego !
+            */
+            //5.go back to 2
+
 
         }
 
@@ -244,13 +399,16 @@ namespace Assets.Scripts.PracticaPart2
                     bestQ = tableQ[idx, i];
                     best_action = i;
                 }
+                //Debug.Log("Best action" + bestQ);
             }
+            //Debug.Log(current_cell.GetPosition);
+            //Debug.Log(bestQ);
             return best_action;
 
         }
         
 
-        //ESCRIBIR ARRAY EN EL FICHERO
+        //esto escribe array final fichero
         private void copyResult(string path)
         {
 
@@ -281,53 +439,6 @@ namespace Assets.Scripts.PracticaPart2
 
                 sw.Close();
             }
-        }
-
-        // METODO PARA PASAR FICHERO A ARRAY TABLAQ
-        private float[,] arrayTablaQ(string path)
-        {
-            float[,] array = new float[14 * 8, 4];
-            //Variable para buscar valor
-            string line = "Not found";
-            int index = -1;
-            float valorQ = -1;
-
-            try
-            {
-                using (StreamReader buscar = new StreamReader(path))
-                {
-                    int linea = 0;
-                    while (!buscar.EndOfStream)
-                    {
-
-                        line = buscar.ReadLine();
-                        string[] celda = line.Split(':', '|');
-                        //[0] = XY
-                        //[1] = N
-                        //[2] = E
-                        //[3] = S
-                        //[4] = O
-
-                        for (int i = 1; i < celda.Length - 1; i++)
-                        {
-                            array[linea, i - 1] = float.Parse(celda[i]);
-                        }
-                        linea++;
-                    }
-
-                    buscar.DiscardBufferedData();
-                    buscar.BaseStream.Seek(0, SeekOrigin.Begin);
-
-                    buscar.Close();
-                }
-            }
-            catch (FileNotFoundException e)
-            {
-                Debug.Log("Error: Fichero no encontrado");
-            }
-
-
-            return array;
         }
 
 
